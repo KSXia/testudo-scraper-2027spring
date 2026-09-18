@@ -4,8 +4,10 @@ import csv
 import time
 import os
 import random
-from datetime import datetime
 import json
+import sys
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # --- CONFIGURATION ---
 TERM = "202701" # Spring 2027
@@ -30,7 +32,7 @@ def get_csv_path():
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR)
     
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
     return os.path.join(DATA_DIR, f"{current_date}.csv")
 
 # Masking our script to look like a normal Chrome browser
@@ -107,8 +109,11 @@ def scrape_departments(prefixes, batch_timestamp):
             for course_id in course_ids:
                 ajax_url = f"{SECTIONS_URL}{course_id}"
                 ajax_response = requests.get(ajax_url, headers=HEADERS)
-                ajax_soup = BeautifulSoup(ajax_response.text, 'html.parser')
                 
+                # Live time the individual course page was requested and downloaded
+                fetch_time = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S")
+                
+                ajax_soup = BeautifulSoup(ajax_response.text, 'html.parser')
                 sections = ajax_soup.find_all('div', class_='section')
                 
                 for section in sections:
@@ -120,8 +125,8 @@ def scrape_departments(prefixes, batch_timestamp):
                     instructor_elem = section.find('span', class_='section-instructor')
                     instructor = instructor_elem.text.strip() if instructor_elem else "TBA"
                     
-                    fetch_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    actual_log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    # Live millisecond time this specific section was processed
+                    actual_log_time = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                     
                     dept_data.append([batch_timestamp, course_id, section_id, instructor, total_seats, open_seats, waitlist, fetch_time, actual_log_time])
                     
@@ -142,6 +147,7 @@ def scrape_departments(prefixes, batch_timestamp):
             
         except Exception as e:
             print(f"Failed! Error: {e}")
+            send_discord_alert(f"⚠️ **Error scraping {prefix}:** {e}", "error")
             
         time.sleep(1)
         
@@ -149,7 +155,7 @@ def scrape_departments(prefixes, batch_timestamp):
 
 # --- MAIN EXECUTION BLOCK ---
 if __name__ == "__main__":
-    start_time_obj = datetime.now()
+    start_time_obj = datetime.now(ZoneInfo("America/New_York"))
     batch_timestamp = start_time_obj.strftime("%Y-%m-%d %H:%M:%S")
     
     print(f"Starting university-wide scrape at {batch_timestamp}")
@@ -163,7 +169,7 @@ if __name__ == "__main__":
         
         total_saved = scrape_departments(prefixes, batch_timestamp)
         
-        end_time_obj = datetime.now()
+        end_time_obj = datetime.now(ZoneInfo("America/New_York"))
         end_time_str = end_time_obj.strftime("%Y-%m-%d %H:%M:%S")
         duration_mins = round((end_time_obj - start_time_obj).total_seconds() / 60, 2)
         
@@ -176,3 +182,4 @@ if __name__ == "__main__":
         
         send_discord_alert(error_msg, "log")
         send_discord_alert(error_msg, "error")
+        sys.exit(1)
