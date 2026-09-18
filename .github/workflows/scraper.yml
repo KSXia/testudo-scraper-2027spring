@@ -33,6 +33,7 @@ jobs:
           DISCORD_WEBHOOK_LOGS: ${{ secrets.DISCORD_WEBHOOK_LOGS }}
           DISCORD_WEBHOOK_ERRORS: ${{ secrets.DISCORD_WEBHOOK_ERRORS }}
           DISCORD_WEBHOOK_ALERTS: ${{ secrets.DISCORD_WEBHOOK_ALERTS }}
+          WATCHLIST_JSON: ${{ secrets.WATCHLIST_JSON }}
         run: python scraper.py
         
       - name: Commit and push changes
