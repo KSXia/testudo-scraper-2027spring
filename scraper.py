@@ -80,7 +80,7 @@ def save_to_csv(data):
     with open(target_path, mode='a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         if not file_exists:
-            writer.writerow(['Timestamp', 'Course', 'Section', 'Instructor', 'Total_Seats', 'Open_Seats', 'Waitlist', 'Fetch_Time'])
+            writer.writerow(['Timestamp', 'Course', 'Section', 'Instructor', 'Total_Seats', 'Open_Seats', 'Waitlist', 'Fetch_Time', 'Actual_Log_Time'])
         writer.writerows(data)
 
 def scrape_departments(prefixes, batch_timestamp):
@@ -121,8 +121,9 @@ def scrape_departments(prefixes, batch_timestamp):
                     instructor = instructor_elem.text.strip() if instructor_elem else "TBA"
                     
                     fetch_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    actual_log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     
-                    dept_data.append([batch_timestamp, course_id, section_id, instructor, total_seats, open_seats, waitlist, fetch_time])
+                    dept_data.append([batch_timestamp, course_id, section_id, instructor, total_seats, open_seats, waitlist, fetch_time, actual_log_time])
                     
                     # --- SEAT ALERT LOGIC ---
                     open_seats_int = int(open_seats) if open_seats.isdigit() else 0
