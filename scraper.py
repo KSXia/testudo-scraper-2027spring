@@ -130,7 +130,7 @@ def scrape_departments(prefixes, batch_timestamp):
                         # Check if the section list is empty (track all) OR if this specific section is in the list
                         if not WATCHLIST[course_id] or section_id in WATCHLIST[course_id]:
                             if open_seats_int > 0:
-                                # send_discord_alert(f"<@&1493113652272955443> 🚨 **SEAT OPEN!** {course_id} (Sec {section_id}) has {open_seats_int} seats! Taught by: {instructor}")
+                                send_discord_alert(f"<@&1493113652272955443> 🚨 **SEAT OPEN!** {course_id} (Sec {section_id}) has {open_seats_int} seats! Taught by: {instructor}")
                 
                 time.sleep(0.1) 
                 
