@@ -1,0 +1,47 @@
+name: Hourly Testudo Scraper
+
+on:
+  schedule:
+    # Run at 35 minutes past the hour to catch the :30 Testudo update
+    - cron: '45 * * * *' # Gives Testudo 15 minutes to update, and GitHub 45 mins before the next cycle
+  workflow_dispatch: # Allows you to trigger it manually
+
+jobs:
+  scrape-and-save:
+    runs-on: ubuntu-latest
+    
+    # Grants the bot permission to save the CSV back to your repo
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+          
+      - name: Run scraper script
+        env:
+          DISCORD_WEBHOOK_LOGS: ${{ secrets.DISCORD_WEBHOOK_LOGS }}
+          DISCORD_WEBHOOK_ERRORS: ${{ secrets.DISCORD_WEBHOOK_ERRORS }}
+          DISCORD_WEBHOOK_ALERTS: ${{ secrets.DISCORD_WEBHOOK_ALERTS }}
+        run: python scraper.py
+        
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # 1. Track the entire data folder instead of a single file
+          git add data/
+          
+          # 2. Check for changes, commit, pull any updates from GitHub, and push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated update: Testudo seat counts" && git pull --rebase origin main && git push)
