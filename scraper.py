@@ -9,10 +9,13 @@ from datetime import datetime
 # --- CONFIGURATION ---
 TERM = "202701" # Spring 2027
 
-# Dictionary mapping courses to the specific sections you want.
-# Note: If you leave a list empty like "CLASS": [], it will track ALL sections.
-WATCHLIST = {
-}
+# Try to load the watchlist from GitHub Secrets, default to empty dict if missing
+watchlist_env = os.environ.get('WATCHLIST_JSON', '{}')
+try:
+    WATCHLIST = json.loads(watchlist_env)
+except json.JSONDecodeError:
+    print("Error parsing WATCHLIST_JSON secret. Ensure it is valid JSON.")
+    WATCHLIST = {}
 
 BASE_URL = f"https://app.testudo.umd.edu/soc/{TERM}"
 SECTIONS_URL = f"https://app.testudo.umd.edu/soc/{TERM}/sections?courseIds="
@@ -150,7 +153,7 @@ if __name__ == "__main__":
     print(f"Starting university-wide scrape at {batch_timestamp}")
     print(f"Data will be saved to the 'data/' directory.\n")
     
-    # send_discord_alert(f"▶️ **Testudo Scraper Started** at {batch_timestamp}", "log")
+    send_discord_alert(f"▶️ **Testudo Scraper Started** at {batch_timestamp}", "log")
 
     try:
         prefixes = get_department_prefixes()
@@ -163,11 +166,11 @@ if __name__ == "__main__":
         duration_mins = round((end_time_obj - start_time_obj).total_seconds() / 60, 2)
         
         print(f"\nDone! Successfully scraped {total_saved} total sections at {end_time_str} in {duration_mins} minutes.")
-        # send_discord_alert(f"✅ **Testudo Scraper Finished at {end_time_str}!** Scraped {total_saved} sections in {duration_mins} minutes.", "log")
+        send_discord_alert(f"✅ **Testudo Scraper Finished at {end_time_str}!** Scraped {total_saved} sections in {duration_mins} minutes.", "log")
         
     except Exception as e:
         error_msg = f"❌ **Scraper Crashed!** Error: {e}"
         print(f"Critical error: {e}")
         
-        # send_discord_alert(error_msg, "log")
-        # send_discord_alert(error_msg, "error")
+        send_discord_alert(error_msg, "log")
+        send_discord_alert(error_msg, "error")
