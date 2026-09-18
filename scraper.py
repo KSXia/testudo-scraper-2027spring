@@ -5,6 +5,7 @@ import time
 import os
 import random
 from datetime import datetime
+import json
 
 # --- CONFIGURATION ---
 TERM = "202701" # Spring 2027
